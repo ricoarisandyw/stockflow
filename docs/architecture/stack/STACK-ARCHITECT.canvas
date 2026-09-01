@@ -1,0 +1,42 @@
+{
+	"nodes":[
+		{"id":"group-trpc-core","type":"group","x":-600,"y":-90,"width":1200,"height":410,"color":"3","label":"⚡ tRPC Layer & Middleware Guard"},
+		{"id":"group-services","type":"group","x":-720,"y":1050,"width":1200,"height":300,"color":"4","label":"⚙️ Business Logic, Validation, & Transaction Layer"},
+		{"id":"group-frontend","type":"group","x":-200,"y":-760,"width":1200,"height":280,"color":"5","label":"🎨 Frontend Client & Server Components (Next.js App Router)"},
+		{"id":"group-routers","type":"group","x":-600,"y":560,"width":1200,"height":260,"color":"2","label":"🔀 tRPC AppRouter & Procedures"},
+		{"id":"group-persistence","type":"group","x":-200,"y":1560,"width":1120,"height":270,"color":"6","label":"🗄️ Data & Persistence Layer"},
+		{"id":"node-trpc-guard","type":"text","text":"### 🔒 `protectedProcedure` Middleware\n- Enforces authentication guard\n- Throws `TRPCError({ code: 'UNAUTHORIZED' })` (HTTP 401)\n- Guarantees `ctx.user` is defined for subsequent handlers","x":-170,"y":-40,"width":340,"height":140,"color":"3"},
+		{"id":"node-trpc-handler","type":"text","text":"### 🌐 tRPC Next.js Fetch Handler\n- `app/api/trpc/[trpc]/route.ts`\n- Single unified endpoint handling all RPC calls\n- Auto error mapping to HTTP 400/401/404/422/500","x":220,"y":-40,"width":340,"height":140,"color":"3"},
+		{"id":"node-ui-auth","type":"text","text":"### 🔐 Auth Pages\n- **Route:** `/login`, `/register`\n- `trpc.auth.login.useMutation()`\n- `trpc.auth.register.useMutation()`\n- Auto toast / error messages from Zod/tRPC","x":-160,"y":-690,"width":340,"height":170,"color":"5"},
+		{"id":"node-ui-products","type":"text","text":"### 📦 Products UI\n- **Route:** `/products`\n- `trpc.product.list.useQuery({ search, page })`\n- `trpc.product.create.useMutation()`\n- `trpc.product.delete.useMutation()`\n- Auto cache invalidation on mutations","x":230,"y":-690,"width":340,"height":170,"color":"5"},
+		{"id":"node-ui-invoices","type":"text","text":"### 🧾 Invoices UI\n- **Route:** `/invoices`, `/invoices/new`, `/invoices/[id]`\n- `trpc.invoice.create.useMutation()`\n- `trpc.invoice.updateStatus.useMutation()`\n- Live calculated subtotal, tax (11%), total\n- Action buttons: Issue, Mark Paid, Cancel","x":620,"y":-690,"width":340,"height":170,"color":"5"},
+		{"id":"node-zod-val","type":"text","text":"### 📋 Zod Schemas\n- `authSchema` (pwd >= 8 chars, email)\n- `productSchema` (unitPrice >= 0, qty >= 0)\n- `invoiceSchema` (min 1 line, positive qty)\n- Direct tRPC `.input()` schema validation","x":-680,"y":1110,"width":260,"height":200,"color":"4"},
+		{"id":"node-auth-service","type":"text","text":"### 🔑 Auth Service\n- bcryptjs password hashing (salted)\n- JWT generation & verification\n- Sanitized generic error responses","x":-390,"y":1110,"width":260,"height":200,"color":"4"},
+		{"id":"node-product-service","type":"text","text":"### 📦 Product Service\n- Unique SKU validation per user\n- Search query builder (name/SKU)\n- Deletion protection check (if referenced in invoice)","x":-100,"y":1110,"width":260,"height":200,"color":"4"},
+		{"id":"node-invoice-service","type":"text","text":"### 🧾 Invoice Transaction Service\n- Auto-generate invoice number (`INV-2026-XXXX`)\n- Snapshots `unitPrice` & `productName` on lines\n- Server-side financial calculations (Subtotal, 11% Tax, Total)\n- **Atomic Issue:** Decrement stock in `$transaction`\n- **Atomic Cancel:** Restore stock in `$transaction`\n- State transition guard (`DRAFT -> ISSUED -> PAID`, `CANCELLED`)","x":190,"y":1110,"width":260,"height":200,"color":"4"},
+		{"id":"node-router-auth","type":"text","text":"### 🔑 `authRouter` (publicProcedure)\n- `auth.register` (input: `registerSchema`)\n- `auth.login` (input: `loginSchema`, sets cookie)\n- `auth.logout` (clears cookie session)","x":-560,"y":610,"width":340,"height":170,"color":"2"},
+		{"id":"node-router-product","type":"text","text":"### 📦 `productRouter` (protectedProcedure)\n- `product.list` (input: search & pagination query)\n- `product.create` / `product.update`\n- `product.delete` (invoice reference check)\n- Per-user data isolation enforced by `ctx.user.id`","x":-170,"y":610,"width":340,"height":170,"color":"2"},
+		{"id":"node-router-invoice","type":"text","text":"### 🧾 `invoiceRouter` (protectedProcedure)\n- `invoice.list` / `invoice.getById`\n- `invoice.create` (Snapshot unitPrice & name)\n- `invoice.updateStatus` (Issue, Cancel, Paid)\n- Triggers atomic inventory transactions","x":220,"y":610,"width":340,"height":170,"color":"2"},
+		{"id":"node-trpc-context","type":"text","text":"### 🛡️ tRPC Context & Session\n- `createTRPCContext` extracts JWT / session cookie\n- Injects `ctx.user` (userId & email)\n- Injects `ctx.prisma` database client","x":-560,"y":100,"width":340,"height":140,"color":"3"},
+		{"id":"node-prisma","type":"text","text":"### 💎 Prisma ORM Client\n- Type-safe query engine & schema migrations\n- `prisma.$transaction` for ACID atomic updates\n- Seeder runner (`prisma/seed.ts`) creating demo user & sample inventory","x":-160,"y":1640,"width":380,"height":170,"color":"6"},
+		{"id":"node-database","type":"text","text":"### 🗄️ SQLite / PostgreSQL Database\n- **Tables:** `User`, `Product`, `Invoice`, `InvoiceItem`\n- Currency stored in integer minor units (no float rounding bugs)\n- Foreign keys with cascade & restrict constraints\n- Per-user compound index on `[userId, sku]`","x":500,"y":1640,"width":380,"height":170,"color":"6"}
+	],
+	"edges":[
+		{"id":"edge-10","fromNode":"node-router-auth","fromSide":"bottom","toNode":"node-auth-service","toSide":"top"},
+		{"id":"edge-11","fromNode":"node-router-product","fromSide":"bottom","toNode":"node-product-service","toSide":"top"},
+		{"id":"edge-12","fromNode":"node-router-invoice","fromSide":"bottom","toNode":"node-invoice-service","toSide":"top"},
+		{"id":"edge-13","fromNode":"node-auth-service","fromSide":"bottom","toNode":"node-prisma","toSide":"top"},
+		{"id":"edge-1","fromNode":"node-ui-auth","fromSide":"bottom","toNode":"node-trpc-handler","toSide":"top","label":"useMutation()"},
+		{"id":"edge-2","fromNode":"node-ui-products","fromSide":"bottom","toNode":"node-trpc-handler","toSide":"top","label":"useQuery() / useMutation()"},
+		{"id":"edge-3","fromNode":"node-ui-invoices","fromSide":"bottom","toNode":"node-trpc-handler","toSide":"top"},
+		{"id":"edge-4","fromNode":"node-trpc-handler","fromSide":"bottom","toNode":"node-trpc-context","toSide":"bottom","label":"Resolve Context"},
+		{"id":"edge-5","fromNode":"node-trpc-context","fromSide":"top","toNode":"node-trpc-guard","toSide":"left","label":"Inject ctx.user"},
+		{"id":"edge-6","fromNode":"node-trpc-guard","fromSide":"bottom","toNode":"node-router-product","toSide":"top","label":"Authorize"},
+		{"id":"edge-7","fromNode":"node-trpc-guard","fromSide":"bottom","toNode":"node-router-invoice","toSide":"top"},
+		{"id":"edge-8","fromNode":"node-trpc-handler","fromSide":"bottom","toNode":"node-router-auth","toSide":"top","label":"Public Route"},
+		{"id":"edge-9","fromNode":"node-router-auth","fromSide":"bottom","toNode":"node-zod-val","toSide":"top","label":"Validate DTO"},
+		{"id":"edge-14","fromNode":"node-product-service","fromSide":"bottom","toNode":"node-prisma","toSide":"top"},
+		{"id":"edge-15","fromNode":"node-invoice-service","fromSide":"bottom","toNode":"node-prisma","toSide":"top","label":"$transaction"},
+		{"id":"edge-16","fromNode":"node-prisma","fromSide":"right","toNode":"node-database","toSide":"left","label":"ACID Queries & Writes"}
+	]
+}

@@ -1,6 +1,38 @@
-# Obsidian
+# Obsidian & Internal Docs
 .obsidian
 docs/ignore
 
-# Mac
+# OS
 .DS_Store
+Thumbs.db
+
+# AI Tools & Agents (Antigravity, Claude, Codex, OpenAI, Cursor, Copilot)
+.agents
+.gemini
+.antigravity
+.claude
+.anthropic
+.codex
+.openai
+.cursor
+.cursorrules
+.copilot
+
+# Dependencies & Build (Next.js / Node)
+node_modules/
+.next/
+out/
+dist/
+coverage/
+
+# Environment Secrets (DO NOT COMMIT REAL SECRETS)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Database
+*.db
+*.db-journal
