@@ -1,0 +1,6 @@
+# Obsidian
+.obsidian
+docs/ignore
+
+# Mac
+.DS_Store
