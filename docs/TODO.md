@@ -9,23 +9,23 @@ This document is the step-by-step execution roadmap for engineering the **StockF
 Establish the core Next.js App Router project foundation with TypeScript, Tailwind CSS, tRPC, Prisma ORM, and SQLite database.
 
 ### 🔨 Tasks & Steps:
-- [ ] Initialize Next.js 14/15 App Router with TypeScript and Tailwind CSS.
-- [ ] Setup tRPC v10/v11 (`@trpc/server`, `@trpc/client`, `@trpc/react-query`, `@tanstack/react-query`).
-- [ ] Configure Prisma Schema (`prisma/schema.prisma`):
+- [x] Initialize Next.js 14/15 App Router with TypeScript and Tailwind CSS.
+- [x] Setup tRPC v10/v11 (`@trpc/server`, `@trpc/client`, `@trpc/react-query`, `@tanstack/react-query`).
+- [x] Configure Prisma Schema (`prisma/schema.prisma`):
   - `User` model (`id`, `email`, `passwordHash`, `name`, timestamps).
   - `Product` model (`id`, `userId`, `sku`, `name`, `description`, `unitPrice`, `quantityOnHand`, timestamps) with `@@unique([userId, sku])`.
   - `Invoice` model (`id`, `userId`, `invoiceNumber`, `customerName`, `issueDate`, `dueDate`, `status`, `subtotal`, `taxRate`, `taxAmount`, `total`).
   - `InvoiceItem` model (`id`, `invoiceId`, `productId`, `productName`, `unitPrice`, `quantity`, `lineTotal`).
   - `InvoiceStatus` enum (`DRAFT`, `ISSUED`, `PAID`, `CANCELLED`).
-- [ ] Create environment template `.env.example` (containing `DATABASE_URL`, `JWT_SECRET`, `DEFAULT_TAX_RATE=11`).
-- [ ] Run initial Prisma migrations to generate local SQLite database `dev.db`.
-- [ ] Create seed script `prisma/seed.ts` to initialize demo account (`demo@stockflow.dev` / `password123`) and 5 sample products.
-- [ ] Configure Vitest test runner (`vitest.config.ts`).
+- [x] Create environment template `.env.example` (containing `DATABASE_URL`, `JWT_SECRET`, `DEFAULT_TAX_RATE=11`).
+- [x] Run initial Prisma migrations to generate local SQLite database `dev.db`.
+- [x] Create seed script `prisma/seed.ts` to initialize demo account (`demo@stockflow.dev` / `password123`) and 5 sample products.
+- [x] Configure Vitest test runner (`vitest.config.ts`).
 
 ### 🔍 Verification & Checkables:
-- [ ] **DB Check:** Run `npx prisma db seed` $\rightarrow$ Seeds demo user and products without errors.
-- [ ] **App Check:** Run `npm run dev` $\rightarrow$ Dev server runs at `http://localhost:3000` with zero console errors.
-- [ ] **Test Check:** Run `npm test` $\rightarrow$ Vitest runner activates and executes baseline placeholder test.
+- [x] **DB Check:** Run `npx prisma db seed` $\rightarrow$ Seeds demo user and products without errors.
+- [x] **App Check:** Run `npm run dev` $\rightarrow$ Dev server runs at `http://localhost:3000` with zero console errors.
+- [x] **Test Check:** Run `npm test` $\rightarrow$ Vitest runner activates and executes baseline placeholder test.
 
 ---
 

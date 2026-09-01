@@ -1,0 +1,16 @@
+model Product {
+  id             String   @id @default(uuid())
+  userId         String
+  sku            String
+  name           String
+  description    String?
+  unitPrice      Int
+  quantityOnHand Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id])
+  invoiceItems InvoiceItem[]
+
+  @@unique([userId, sku])
+}

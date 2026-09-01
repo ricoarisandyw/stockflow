@@ -36,3 +36,6 @@ coverage/
 # Database
 *.db
 *.db-journal
+
+# Generated Prisma Client
+src/generated/

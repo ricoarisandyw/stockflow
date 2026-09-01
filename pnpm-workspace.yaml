@@ -1,0 +1,14 @@
+packages:
+  - "."
+
+allowBuilds:
+  '@prisma/engines': true
+  better-sqlite3: true
+  esbuild: true
+  prisma: true
+  unrs-resolver: true
+
+overrides:
+  postcss: ">=8.5.23"
+  mysql2: ">=3.22.0"
+  deepmerge-ts: ">=8.0.0"
