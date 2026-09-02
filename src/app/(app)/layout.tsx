@@ -12,8 +12,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <NavBar userName={user.name ?? user.email} />
-      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+      <div className="print:hidden">
+        <NavBar userName={user.name ?? user.email} />
+      </div>
+      <main className="mx-auto max-w-5xl px-4 py-8 print:p-0">{children}</main>
     </div>
   );
 }

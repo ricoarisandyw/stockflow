@@ -35,6 +35,12 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to `/login`.
 
+### Option 2 : Docker Setup
+
+```bash
+docker compose up -d
+```
+
 ### Demo credentials
 
 ```
@@ -43,6 +49,8 @@ Password: Password123!
 ```
 
 or use the **"Use demo credentials"** button
+
+
 
 ## Running tests
 
