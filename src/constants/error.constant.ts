@@ -58,6 +58,35 @@ export const ErrorConstant = {
   },
 
   // ==========================================
+  // 3000 - 3999: INVOICE DOMAIN
+  // ==========================================
+  INVOICE_NOT_FOUND: {
+    codeNumber: 3001,
+    code: "NOT_FOUND",
+    message: "Invoice not found.",
+  },
+  INVOICE_PRODUCT_NOT_FOUND: {
+    codeNumber: 3002,
+    code: "BAD_REQUEST",
+    message: "One or more products referenced by the invoice do not exist.",
+  },
+  INVOICE_INSUFFICIENT_STOCK: {
+    codeNumber: 3003,
+    code: "UNPROCESSABLE_ENTITY",
+    message: "Insufficient stock for one or more products.",
+  },
+  INVOICE_NOT_DRAFT: {
+    codeNumber: 3004,
+    code: "BAD_REQUEST",
+    message: "Only draft invoices can be edited.",
+  },
+  INVOICE_INVALID_TRANSITION: {
+    codeNumber: 3005,
+    code: "BAD_REQUEST",
+    message: "This status transition is not allowed.",
+  },
+
+  // ==========================================
   // 9000 - 9999: GENERAL & SYSTEM DOMAIN
   // ==========================================
   INVALID_PAYLOAD: {
