@@ -1,6 +1,70 @@
-# Obsidian
-.obsidian
-docs/ignore
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
 
-# Mac
+# Testing & Coverage
+coverage/
+*.lcov
+
+# Next.js Build & Output
+.next/
+out/
+build/
+dist/
+
+# Environment Variables & Secrets (Requirement A8)
+.env
+.env*.local
+.env.development
+.env.test
+.env.production
+!.env.example
+
+# SQLite Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
+dev.db
+
+# Generated Prisma Client & TypeScript Info
+src/generated/
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS & System Files
 .DS_Store
+Thumbs.db
+
+# IDE & Workspace
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# Obsidian & Internal Docs
+.obsidian
+docs/ignore/
+
+# Personal & Scratch Files
+TODO.md
+swagger.html
+
+# AI Assistants & Agents (Antigravity, Claude, Codex)
+.agents/
+.gemini/
+.antigravity/
+AGENTS.md
+.claude/
+CLAUDE.md
+.anthropic/
+.codex/
+CODEX.md
+.cursor/
+.cursorrules

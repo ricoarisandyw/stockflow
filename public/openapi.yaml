@@ -1,0 +1,1004 @@
+openapi: 3.1.0
+info:
+  title: StockFlow API
+  version: 1.0.0
+  description: Official OpenAPI 3.1 contract specification for StockFlow Inventory & Invoicing system.
+servers:
+  - url: /api
+    description: Current Base API Gateway
+
+security:
+  - bearerAuth: []
+
+paths:
+  # -------------------------------------------------------------
+  # AUTHENTICATION ENDPOINTS
+  # -------------------------------------------------------------
+  /auth/register:
+    post:
+      summary: Register new user account
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: staff@stockflow.dev
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: Password123!
+                name:
+                  type: string
+                  example: Staff Distribution
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+
+  /auth/login:
+    post:
+      summary: Authenticate user credentials
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: staff@stockflow.dev
+                password:
+                  type: string
+                  format: password
+                  example: Password123!
+      responses:
+        '200':
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/logout:
+    post:
+      summary: Invalidate user session
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Session invalidated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessageResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/me:
+    get:
+      summary: Get currently authenticated user profile
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Active user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # -------------------------------------------------------------
+  # PRODUCT & INVENTORY ENDPOINTS
+  # -------------------------------------------------------------
+  /products:
+    get:
+      summary: List products with pagination and search
+      tags:
+        - Products
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+        - name: search
+          in: query
+          required: false
+          description: Case-insensitive search on name or SKU
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated product list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      summary: Create a new product
+      tags:
+        - Products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductInput'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+
+  /products/{id}:
+    get:
+      summary: Get single product details by ID
+      tags:
+        - Products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    patch:
+      summary: Update existing product
+      tags:
+        - Products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductInput'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+
+    delete:
+      summary: Delete product (Guarded against active invoice items)
+      tags:
+        - Products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessageResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Product cannot be deleted because it is referenced in existing invoices
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+
+  # -------------------------------------------------------------
+  # INVOICE ENDPOINTS
+  # -------------------------------------------------------------
+  /invoices:
+    get:
+      summary: List invoices with pagination and status filter
+      tags:
+        - Invoices
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/InvoiceStatus'
+      responses:
+        '200':
+          description: Paginated invoices list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InvoiceSummary'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      summary: Create new invoice in DRAFT status
+      tags:
+        - Invoices
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvoiceInput'
+      responses:
+        '201':
+          description: Invoice created in DRAFT status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/InvoiceDetail'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          description: Insufficient stock or invalid line items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+
+  /invoices/{id}:
+    get:
+      summary: Get invoice details with snapshot line items and financial breakdown
+      tags:
+        - Invoices
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Complete invoice details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/InvoiceDetail'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    patch:
+      summary: Update invoice items and fields (DRAFT status only)
+      tags:
+        - Invoices
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInvoiceInput'
+      responses:
+        '200':
+          description: Draft invoice updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/InvoiceDetail'
+        '400':
+          description: Editing is forbidden if invoice is not in DRAFT status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+
+  /invoices/{id}/issue:
+    post:
+      summary: Issue invoice (Transitions DRAFT -> ISSUED and decrements stock atomically)
+      tags:
+        - Invoices
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invoice issued successfully and stock decremented
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/InvoiceSummary'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          description: Stock shortage prevents issuing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+
+  /invoices/{id}/pay:
+    post:
+      summary: Mark invoice as paid (Transitions ISSUED -> PAID)
+      tags:
+        - Invoices
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invoice marked as paid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/InvoiceSummary'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /invoices/{id}/cancel:
+    post:
+      summary: Cancel invoice (Transitions DRAFT/ISSUED -> CANCELLED, restoring stock if ISSUED)
+      tags:
+        - Invoices
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invoice cancelled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: inv_01
+                      status:
+                        $ref: '#/components/schemas/InvoiceStatus'
+                      restoredStock:
+                        type: boolean
+                        example: true
+                      updatedAt:
+                        type: string
+                        format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+# -------------------------------------------------------------
+# COMPONENTS & SCHEMAS
+# -------------------------------------------------------------
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    InvoiceStatus:
+      type: string
+      enum:
+        - DRAFT
+        - ISSUED
+        - PAID
+        - CANCELLED
+      example: DRAFT
+
+    PaginationMeta:
+      type: object
+      required:
+        - page
+        - limit
+        - totalItems
+        - totalPages
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        totalItems:
+          type: integer
+          example: 42
+        totalPages:
+          type: integer
+          example: 5
+
+    SuccessMessageResponse:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              example: Operasi berhasil dilakukan.
+
+    StandardErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              example: BAD_REQUEST
+            message:
+              type: string
+              example: Permintaan tidak dapat diproses.
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    example: sku
+                  message:
+                    type: string
+                    example: SKU sudah digunakan.
+
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - createdAt
+      properties:
+        id:
+          type: string
+          example: usr_01
+        email:
+          type: string
+          format: email
+          example: staff@stockflow.dev
+        name:
+          type: string
+          nullable: true
+          example: Staff Distribution
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-09-02T10:00:00.000Z"
+
+    AuthResponse:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          required:
+            - user
+            - token
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+            token:
+              type: string
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    Product:
+      type: object
+      required:
+        - id
+        - sku
+        - name
+        - unitPrice
+        - quantityOnHand
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          example: prd_01
+        sku:
+          type: string
+          example: KB-MCH-01
+        name:
+          type: string
+          example: Mechanical Keyboard TKL
+        description:
+          type: string
+          nullable: true
+          example: Wireless RGB Mechanical Keyboard
+        unitPrice:
+          type: integer
+          description: Price in integer minor units / cents
+          minimum: 0
+          example: 850000
+        quantityOnHand:
+          type: integer
+          description: Available physical stock
+          minimum: 0
+          example: 25
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-09-02T10:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-09-02T10:00:00.000Z"
+
+    CreateProductInput:
+      type: object
+      required:
+        - sku
+        - name
+        - unitPrice
+        - quantityOnHand
+      properties:
+        sku:
+          type: string
+          example: KB-MCH-01
+        name:
+          type: string
+          example: Mechanical Keyboard TKL
+        description:
+          type: string
+          example: Wireless RGB Mechanical Keyboard
+        unitPrice:
+          type: integer
+          minimum: 0
+          example: 850000
+        quantityOnHand:
+          type: integer
+          minimum: 0
+          example: 25
+
+    UpdateProductInput:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Mechanical Keyboard TKL v2
+        description:
+          type: string
+          example: Wireless RGB Mechanical Keyboard (Updated)
+        unitPrice:
+          type: integer
+          minimum: 0
+          example: 900000
+        quantityOnHand:
+          type: integer
+          minimum: 0
+          example: 30
+
+    InvoiceItem:
+      type: object
+      required:
+        - id
+        - productId
+        - productName
+        - unitPrice
+        - quantity
+        - lineTotal
+      properties:
+        id:
+          type: string
+          example: itm_01
+        productId:
+          type: string
+          example: prd_01
+        productName:
+          type: string
+          description: Snapshot of product name at invoice creation
+          example: Mechanical Keyboard TKL
+        unitPrice:
+          type: integer
+          description: Snapshot of unit price at invoice creation (cents)
+          example: 850000
+        quantity:
+          type: integer
+          minimum: 1
+          example: 2
+        lineTotal:
+          type: integer
+          description: unitPrice * quantity (cents)
+          example: 1700000
+
+    InvoiceSummary:
+      type: object
+      required:
+        - id
+        - invoiceNumber
+        - customerName
+        - issueDate
+        - dueDate
+        - status
+        - subtotal
+        - taxRate
+        - taxAmount
+        - total
+        - itemCount
+        - createdAt
+      properties:
+        id:
+          type: string
+          example: inv_01
+        invoiceNumber:
+          type: string
+          example: INV-2026-0001
+        customerName:
+          type: string
+          example: PT Teknologi Maju
+        issueDate:
+          type: string
+          format: date-time
+          example: "2026-09-02T10:00:00.000Z"
+        dueDate:
+          type: string
+          format: date-time
+          example: "2026-09-16T10:00:00.000Z"
+        status:
+          $ref: '#/components/schemas/InvoiceStatus'
+        subtotal:
+          type: integer
+          example: 1700000
+        taxRate:
+          type: integer
+          example: 11
+        taxAmount:
+          type: integer
+          example: 187000
+        total:
+          type: integer
+          example: 1887000
+        itemCount:
+          type: integer
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-09-02T10:00:00.000Z"
+
+    InvoiceDetail:
+      allOf:
+        - $ref: '#/components/schemas/InvoiceSummary'
+        - type: object
+          properties:
+            notes:
+              type: string
+              nullable: true
+              example: Pengiriman via kurir ekspres
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/InvoiceItem'
+            updatedAt:
+              type: string
+              format: date-time
+              example: "2026-09-02T10:00:00.000Z"
+
+    CreateInvoiceItemInput:
+      type: object
+      required:
+        - productId
+        - quantity
+      properties:
+        productId:
+          type: string
+          example: prd_01
+        quantity:
+          type: integer
+          minimum: 1
+          example: 2
+
+    CreateInvoiceInput:
+      type: object
+      required:
+        - customerName
+        - dueDate
+        - items
+      properties:
+        customerName:
+          type: string
+          example: PT Teknologi Maju
+        issueDate:
+          type: string
+          format: date-time
+          example: "2026-09-02T10:00:00.000Z"
+        dueDate:
+          type: string
+          format: date-time
+          example: "2026-09-16T10:00:00.000Z"
+        notes:
+          type: string
+          example: Pengiriman via kurir ekspres
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CreateInvoiceItemInput'
+
+    UpdateInvoiceInput:
+      type: object
+      properties:
+        customerName:
+          type: string
+          example: PT Teknologi Maju Abadi
+        dueDate:
+          type: string
+          format: date-time
+          example: "2026-09-20T10:00:00.000Z"
+        notes:
+          type: string
+          example: Catatan diperbarui
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CreateInvoiceItemInput'
+
+  responses:
+    BadRequestError:
+      description: Bad Request (Invalid input payload or illegal state transition)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StandardErrorResponse'
+
+    UnauthorizedError:
+      description: Unauthorized (Invalid credentials or missing auth header)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StandardErrorResponse'
+
+    ForbiddenError:
+      description: Forbidden (Access to another user's tenant data is denied)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StandardErrorResponse'
+
+    NotFoundError:
+      description: Resource Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StandardErrorResponse'
+
+    ConflictError:
+      description: Conflict (Unique constraint duplicate or foreign key delete restriction)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StandardErrorResponse'
+
+    UnprocessableEntityError:
+      description: Unprocessable Entity (Schema validation or business rule failure)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StandardErrorResponse'
+
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StandardErrorResponse'

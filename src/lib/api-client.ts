@@ -1,0 +1,7 @@
+import createClient from "openapi-fetch";
+import type { paths } from "@/generated/api/schema";
+
+export const apiClient = createClient<paths>({
+  baseUrl: "/api",
+  credentials: "include",
+});

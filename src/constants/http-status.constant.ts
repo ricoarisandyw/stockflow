@@ -1,0 +1,71 @@
+export type THttpErrorCode =
+  | "PARSE_ERROR"
+  | "BAD_REQUEST"
+  | "UNAUTHORIZED"
+  | "FORBIDDEN"
+  | "NOT_FOUND"
+  | "METHOD_NOT_SUPPORTED"
+  | "TIMEOUT"
+  | "CONFLICT"
+  | "PRECONDITION_FAILED"
+  | "PAYLOAD_TOO_LARGE"
+  | "UNPROCESSABLE_ENTITY"
+  | "TOO_MANY_REQUESTS"
+  | "CLIENT_CLOSED_REQUEST"
+  | "INTERNAL_SERVER_ERROR"
+  | "NOT_IMPLEMENTED"
+  | "BAD_GATEWAY"
+  | "SERVICE_UNAVAILABLE"
+  | "GATEWAY_TIMEOUT";
+
+export type THttpStatusCode =
+  | 200
+  | 201
+  | 204
+  | 400
+  | 401
+  | 403
+  | 404
+  | 405
+  | 408
+  | 409
+  | 412
+  | 413
+  | 422
+  | 429
+  | 499
+  | 500
+  | 501
+  | 502
+  | 503
+  | 504;
+
+const STATUS_BY_CODE: Record<THttpErrorCode, THttpStatusCode> = {
+  PARSE_ERROR: 400,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  METHOD_NOT_SUPPORTED: 405,
+  TIMEOUT: 408,
+  CONFLICT: 409,
+  PRECONDITION_FAILED: 412,
+  PAYLOAD_TOO_LARGE: 413,
+  UNPROCESSABLE_ENTITY: 422,
+  TOO_MANY_REQUESTS: 429,
+  CLIENT_CLOSED_REQUEST: 499,
+  INTERNAL_SERVER_ERROR: 500,
+  NOT_IMPLEMENTED: 501,
+  BAD_GATEWAY: 502,
+  SERVICE_UNAVAILABLE: 503,
+  GATEWAY_TIMEOUT: 504,
+};
+
+function getStatusCode(code: THttpErrorCode): THttpStatusCode {
+  return STATUS_BY_CODE[code] ?? 500;
+}
+
+export const HttpStatusConstant = {
+  STATUS_BY_CODE,
+  getStatusCode,
+};
