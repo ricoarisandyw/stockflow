@@ -41,6 +41,9 @@ Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to 
 docker compose up -d
 ```
 
+### Option 3 : Deployed Demo
+[https://stockflow-black-eight.vercel.app/](https://stockflow-black-eight.vercel.app/)
+
 ### Demo credentials
 
 ```
