@@ -12,12 +12,16 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
-    "db:setup": "npm run db:generate && npm run db:migrate && npm run db:seed",
+    "db:setup": "npm run db:generate && node scripts/db-sync.mjs && npm run db:seed",
+
+
     "api:generate-types": "openapi-typescript public/openapi.yaml -o src/generated/api/schema.d.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
+    "@libsql/client": "^0.17.4",
     "@prisma/adapter-better-sqlite3": "^7.10.0",
+    "@prisma/adapter-libsql": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "@tanstack/react-query": "^5.102.8",
     "bcryptjs": "^3.0.3",
