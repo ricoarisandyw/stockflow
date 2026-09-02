@@ -100,6 +100,7 @@ export default function InvoicesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     },
     onError: (error: TInvoiceError) => {
       window.alert(error.error?.message ?? "Failed to update invoice status.");

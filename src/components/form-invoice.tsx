@@ -130,6 +130,7 @@ export function FormInvoice({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
       onDone();
     },
     onError: (error) => {
@@ -282,9 +283,9 @@ export function FormInvoice({
                 <div className="w-32 pt-2 text-right text-sm text-gray-500">
                   {selectedProduct
                     ? MoneyUtils.lineTotal(
-                        selectedProduct.unitPrice,
-                        Math.max(0, watchedItems[index]?.quantity || 0)
-                      ).toLocaleString()
+                      selectedProduct.unitPrice,
+                      Math.max(0, watchedItems[index]?.quantity || 0)
+                    ).toLocaleString()
                     : "—"}
                 </div>
 
