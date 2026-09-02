@@ -52,6 +52,19 @@ Thumbs.db
 .obsidian
 docs/ignore/
 
-# Personal / Scratch Files
+# Personal & Scratch Files
 TODO.md
 swagger.html
+
+# AI Assistants & Agents (Antigravity, Claude, Codex)
+.agents/
+.gemini/
+.antigravity/
+AGENTS.md
+.claude/
+CLAUDE.md
+.anthropic/
+.codex/
+CODEX.md
+.cursor/
+.cursorrules
