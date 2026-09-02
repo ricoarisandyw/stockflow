@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
@@ -11,6 +11,7 @@ import { MoneyUtils } from "@/utils/money.utils";
 import type { components } from "@/generated/api/schema";
 
 type TInvoiceError = components["schemas"]["StandardErrorResponse"];
+type TInvoiceSummary = components["schemas"]["InvoiceSummary"];
 
 const invoiceFormSchema = z.object({
   customerName: z.string().trim().min(1, "Customer name is required."),
@@ -21,8 +22,22 @@ const invoiceFormSchema = z.object({
 
 type TFormInput = z.infer<typeof invoiceFormSchema>;
 
-export function FormInvoiceCreate({ onDone }: { onDone: () => void }) {
+function toDateInputValue(iso: string): string {
+  return iso.slice(0, 10);
+}
+
+export function FormInvoice({
+  invoice,
+  readOnly = false,
+  onDone,
+}: {
+  invoice?: TInvoiceSummary;
+  readOnly?: boolean;
+  onDone: () => void;
+}) {
   const queryClient = useQueryClient();
+  const isEditing = Boolean(invoice) && !readOnly;
+  const isViewing = Boolean(invoice) && readOnly;
 
   const productsQuery = useQuery({
     queryKey: ["products", { limit: 100 }],
@@ -34,10 +49,21 @@ export function FormInvoiceCreate({ onDone }: { onDone: () => void }) {
   });
   const products = productsQuery.data?.data ?? [];
 
+  const invoiceDetailQuery = useQuery({
+    queryKey: ["invoices", invoice?.id],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/invoices/{id}", { params: { path: { id: invoice!.id } } });
+      if (error) throw error;
+      return data;
+    },
+    enabled: Boolean(invoice),
+  });
+
   const {
     register,
     control,
     handleSubmit,
+    reset,
     setError,
     formState: { errors },
   } = useForm<TFormInput>({
@@ -49,6 +75,19 @@ export function FormInvoiceCreate({ onDone }: { onDone: () => void }) {
       items: [{ productId: "", quantity: 1 }],
     },
   });
+
+  useEffect(() => {
+    const detail = invoiceDetailQuery.data?.data;
+    if (!detail) return;
+    reset({
+      customerName: detail.customerName,
+      dueDate: toDateInputValue(detail.dueDate),
+      notes: detail.notes ?? "",
+      items: detail.items?.map((item) => ({ productId: item.productId, quantity: item.quantity })) ?? [
+        { productId: "", quantity: 1 },
+      ],
+    });
+  }, [invoiceDetailQuery.data, reset]);
 
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
 
@@ -66,17 +105,26 @@ export function FormInvoiceCreate({ onDone }: { onDone: () => void }) {
     return MoneyUtils.calculate(lines);
   }, [watchedItems, products]);
 
-  const createMutation = useMutation<unknown, TInvoiceError, TFormInput>({
+  const saveMutation = useMutation<unknown, TInvoiceError, TFormInput>({
     mutationFn: async (values) => {
       const dueDate = new Date(values.dueDate);
-      const { data, error } = await apiClient.POST("/invoices", {
-        body: {
-          customerName: values.customerName,
-          dueDate: dueDate.toISOString(),
-          notes: values.notes || undefined,
-          items: values.items,
-        },
-      });
+      const payload = {
+        customerName: values.customerName,
+        dueDate: dueDate.toISOString(),
+        notes: values.notes || undefined,
+        items: values.items,
+      };
+
+      if (isEditing && invoice) {
+        const { data, error } = await apiClient.PATCH("/invoices/{id}", {
+          params: { path: { id: invoice.id } },
+          body: payload,
+        });
+        if (error) throw error;
+        return data;
+      }
+
+      const { data, error } = await apiClient.POST("/invoices", { body: payload });
       if (error) throw error;
       return data;
     },
@@ -94,15 +142,25 @@ export function FormInvoiceCreate({ onDone }: { onDone: () => void }) {
   });
 
   function onSubmit(values: TFormInput) {
-    createMutation.mutate(values);
+    saveMutation.mutate(values);
+  }
+
+  if (Boolean(invoice) && invoiceDetailQuery.isLoading) {
+    return (
+      <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500 shadow-sm">
+        Loading invoice…
+      </div>
+    );
   }
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={isViewing ? (e) => e.preventDefault() : handleSubmit(onSubmit)}
       className="space-y-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
     >
-      <h2 className="text-lg font-medium text-gray-900">New invoice</h2>
+      <h2 className="text-lg font-medium text-gray-900">
+        {isViewing ? "Invoice detail" : isEditing ? "Edit invoice" : "New invoice"}
+      </h2>
 
       {errors.root?.message && (
         <div role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -118,9 +176,10 @@ export function FormInvoiceCreate({ onDone }: { onDone: () => void }) {
           <input
             id="customerName"
             type="text"
+            disabled={isViewing}
             aria-invalid={errors.customerName ? true : undefined}
             aria-describedby={errors.customerName ? "customerName-error" : undefined}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500 disabled:bg-gray-100 disabled:text-gray-500"
             {...register("customerName")}
           />
           {errors.customerName?.message && (
@@ -137,9 +196,10 @@ export function FormInvoiceCreate({ onDone }: { onDone: () => void }) {
           <input
             id="dueDate"
             type="date"
+            disabled={isViewing}
             aria-invalid={errors.dueDate ? true : undefined}
             aria-describedby={errors.dueDate ? "dueDate-error" : undefined}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500 disabled:bg-gray-100 disabled:text-gray-500"
             {...register("dueDate")}
           />
           {errors.dueDate?.message && (
@@ -157,7 +217,8 @@ export function FormInvoiceCreate({ onDone }: { onDone: () => void }) {
         <input
           id="notes"
           type="text"
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+          disabled={isViewing}
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500 disabled:bg-gray-100 disabled:text-gray-500"
           {...register("notes")}
         />
       </div>
@@ -165,13 +226,15 @@ export function FormInvoiceCreate({ onDone }: { onDone: () => void }) {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-gray-700">Line items</h3>
-          <button
-            type="button"
-            onClick={() => append({ productId: "", quantity: 1 })}
-            className="text-sm font-medium text-gray-500 hover:text-gray-900"
-          >
-            + Add item
-          </button>
+          {!isViewing && (
+            <button
+              type="button"
+              onClick={() => append({ productId: "", quantity: 1 })}
+              className="text-sm font-medium text-gray-500 hover:text-gray-900"
+            >
+              + Add item
+            </button>
+          )}
         </div>
 
         {errors.items?.message && <p className="text-sm text-red-600">{errors.items.message}</p>}
@@ -183,8 +246,9 @@ export function FormInvoiceCreate({ onDone }: { onDone: () => void }) {
               <div key={field.id} className="flex items-start gap-2">
                 <div className="flex-1">
                   <select
+                    disabled={isViewing}
                     aria-invalid={errors.items?.[index]?.productId ? true : undefined}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500 disabled:bg-gray-100 disabled:text-gray-500"
                     {...register(`items.${index}.productId` as const)}
                   >
                     <option value="">Select product…</option>
@@ -205,8 +269,9 @@ export function FormInvoiceCreate({ onDone }: { onDone: () => void }) {
                     min={1}
                     step={1}
                     max={selectedProduct?.quantityOnHand}
+                    disabled={isViewing}
                     aria-invalid={errors.items?.[index]?.quantity ? true : undefined}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500 disabled:bg-gray-100 disabled:text-gray-500"
                     {...register(`items.${index}.quantity` as const, { valueAsNumber: true })}
                   />
                   {errors.items?.[index]?.quantity?.message && (
@@ -223,14 +288,16 @@ export function FormInvoiceCreate({ onDone }: { onDone: () => void }) {
                     : "—"}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => remove(index)}
-                  disabled={fields.length === 1}
-                  className="pt-2 text-sm font-medium text-red-600 hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Remove
-                </button>
+                {!isViewing && (
+                  <button
+                    type="button"
+                    onClick={() => remove(index)}
+                    disabled={fields.length === 1}
+                    className="pt-2 text-sm font-medium text-red-600 hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
             );
           })}
@@ -253,19 +320,25 @@ export function FormInvoiceCreate({ onDone }: { onDone: () => void }) {
       </div>
 
       <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={createMutation.isPending}
-          className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {createMutation.isPending ? "Creating…" : "Create invoice"}
-        </button>
+        {!isViewing && (
+          <button
+            type="submit"
+            disabled={saveMutation.isPending}
+            className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {saveMutation.isPending ? "Saving…" : isEditing ? "Save changes" : "Create invoice"}
+          </button>
+        )}
         <button
           type="button"
           onClick={onDone}
-          className="text-sm font-medium text-gray-500 hover:text-gray-900"
+          className={
+            isViewing
+              ? "rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+              : "text-sm font-medium text-gray-500 hover:text-gray-900"
+          }
         >
-          Cancel
+          {isViewing ? "Close" : "Cancel"}
         </button>
       </div>
     </form>

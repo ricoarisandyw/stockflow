@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { FormInvoiceCreate } from "@/components/form-invoice-create";
+import { FormInvoice } from "@/components/form-invoice";
 import { SkeletonComponent } from "@/components/skeleton";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { components } from "@/generated/api/schema";
@@ -54,7 +54,8 @@ const STATUS_BADGE_STYLES: Record<TInvoiceStatus, string> = {
 
 export default function InvoicesPage() {
   const queryClient = useQueryClient();
-  const [showForm, setShowForm] = useState(false);
+  const [formMode, setFormMode] = useState<"none" | "create" | TInvoiceSummary>("none");
+  const [viewingInvoice, setViewingInvoice] = useState<TInvoiceSummary | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<TInvoiceStatus | "ALL">("ALL");
   const [page, setPage] = useState(1);
@@ -114,10 +115,13 @@ export default function InvoicesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-900">Invoices</h1>
-        {!showForm && (
+        {formMode === "none" && (
           <button
             type="button"
-            onClick={() => setShowForm(true)}
+            onClick={() => {
+              setViewingInvoice(null);
+              setFormMode("create");
+            }}
             className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
           >
             New invoice
@@ -125,7 +129,16 @@ export default function InvoicesPage() {
         )}
       </div>
 
-      {showForm && <FormInvoiceCreate onDone={() => setShowForm(false)} />}
+      {formMode !== "none" && (
+        <FormInvoice
+          invoice={formMode === "create" ? undefined : formMode}
+          onDone={() => setFormMode("none")}
+        />
+      )}
+
+      {viewingInvoice && (
+        <FormInvoice invoice={viewingInvoice} readOnly onDone={() => setViewingInvoice(null)} />
+      )}
 
       <div className="flex items-center justify-between gap-4">
         <input
@@ -222,8 +235,27 @@ export default function InvoicesPage() {
                   </td>
                   <td className="px-4 py-2 text-right text-gray-900">{invoice.total.toLocaleString()}</td>
                   <td className="px-4 py-2 text-right">
-                    {TRANSITION_ACTIONS[invoice.status].length === 0 && (
-                      <span className="text-sm text-gray-400">—</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormMode("none");
+                        setViewingInvoice(invoice);
+                      }}
+                      className="text-sm font-medium text-gray-500 hover:text-gray-900"
+                    >
+                      View
+                    </button>
+                    {invoice.status === "DRAFT" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setViewingInvoice(null);
+                          setFormMode(invoice);
+                        }}
+                        className="ml-3 text-sm font-medium text-gray-500 hover:text-gray-900"
+                      >
+                        Edit
+                      </button>
                     )}
                     {TRANSITION_ACTIONS[invoice.status].map((action) => (
                       <button
