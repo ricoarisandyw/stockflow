@@ -114,7 +114,7 @@ export default function InvoicesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between print:hidden">
         <h1 className="text-xl font-semibold text-gray-900">Invoices</h1>
         {formMode === "none" && (
           <button
@@ -131,17 +131,19 @@ export default function InvoicesPage() {
       </div>
 
       {formMode !== "none" && (
-        <FormInvoice
-          invoice={formMode === "create" ? undefined : formMode}
-          onDone={() => setFormMode("none")}
-        />
+        <div className="print:hidden">
+          <FormInvoice
+            invoice={formMode === "create" ? undefined : formMode}
+            onDone={() => setFormMode("none")}
+          />
+        </div>
       )}
 
       {viewingInvoice && (
         <FormInvoice invoice={viewingInvoice} readOnly onDone={() => setViewingInvoice(null)} />
       )}
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 print:hidden">
         <input
           type="search"
           placeholder="Search by customer or invoice number…"
@@ -166,7 +168,7 @@ export default function InvoicesPage() {
         </label>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 print:hidden">
         {STATUS_FILTERS.map((filter) => (
           <button
             key={filter.value}
@@ -183,7 +185,7 @@ export default function InvoicesPage() {
         ))}
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white print:hidden">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50">
             <tr>
@@ -281,7 +283,7 @@ export default function InvoicesPage() {
       </div>
 
       {meta && meta.totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-gray-500">
+        <div className="flex items-center justify-between text-sm text-gray-500 print:hidden">
           <span>
             Page {meta.page} of {meta.totalPages} ({meta.totalItems} items)
           </span>
