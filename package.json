@@ -12,6 +12,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
+    "db:setup": "npm run db:generate && npm run db:migrate && npm run db:seed",
     "api:generate-types": "openapi-typescript public/openapi.yaml -o src/generated/api/schema.d.ts"
   },
   "dependencies": {
