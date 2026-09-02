@@ -1,50 +1,29 @@
-import { vi } from "vitest";
+import { userModel, userTestUtils } from "./models/user.mock";
+import { productModel, productTestUtils } from "./models/product.mock";
+import { invoiceItemModel, invoiceItemTestUtils } from "./models/invoice-item.mock";
 
-export interface MockUser {
-  id: string;
-  email: string;
-  passwordHash: string;
-  name: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-let users: MockUser[] = [];
-let nextId = 1;
-
-function resetMockDb() {
-  users = [];
-  nextId = 1;
-}
-
-function seedUser(partial: Partial<MockUser> & { email: string; passwordHash: string }): MockUser {
-  const user: MockUser = {
-    id: partial.id ?? `usr_${nextId++}`,
-    email: partial.email,
-    passwordHash: partial.passwordHash,
-    name: partial.name ?? null,
-    createdAt: partial.createdAt ?? new Date(),
-    updatedAt: partial.updatedAt ?? new Date(),
-  };
-  users.push(user);
-  return user;
-}
+export type { MockUser } from "./models/user.mock";
+export type { MockProduct } from "./models/product.mock";
+export type { MockInvoiceItem } from "./models/invoice-item.mock";
 
 export const mockPrisma = {
-  user: {
-    findUnique: vi.fn(async ({ where }: { where: { email?: string; id?: string } }) => {
-      if (where.email) return users.find((u) => u.email === where.email) ?? null;
-      if (where.id) return users.find((u) => u.id === where.id) ?? null;
-      return null;
-    }),
-    create: vi.fn(
-      async ({
-        data,
-      }: {
-        data: { email: string; passwordHash: string; name?: string };
-      }) => seedUser(data)
-    ),
-  },
+  user: userModel,
+  product: productModel,
+  invoiceItem: invoiceItemModel,
 };
 
-export const prismaTestUtils = { resetMockDb, seedUser, getUsers: () => users };
+function resetMockDb() {
+  userTestUtils.reset();
+  productTestUtils.reset();
+  invoiceItemTestUtils.reset();
+}
+
+export const prismaTestUtils = {
+  resetMockDb,
+  seedUser: userTestUtils.seedUser,
+  getUsers: userTestUtils.getUsers,
+  seedProduct: productTestUtils.seedProduct,
+  getProducts: productTestUtils.getProducts,
+  seedInvoiceItem: invoiceItemTestUtils.seedInvoiceItem,
+  getInvoiceItems: invoiceItemTestUtils.getInvoiceItems,
+};
