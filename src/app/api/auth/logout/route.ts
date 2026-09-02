@@ -5,9 +5,10 @@ import { AuthLib } from "@/lib/auth.lib";
 
 export async function POST(request: NextRequest) {
   try {
-    await authMiddleware(request);
-    const response = ApiResponse.ok({ message: "Session terminated successfully." });
+    const payload = await authMiddleware(request);
+    AuthLib.revokeToken(payload);
 
+    const response = ApiResponse.ok({ message: "Session terminated successfully." });
     response.cookies.delete(AuthLib.AUTH_COOKIE_NAME);
     return response;
   } catch (error) {
