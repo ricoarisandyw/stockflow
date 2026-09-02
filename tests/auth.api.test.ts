@@ -8,23 +8,9 @@ import { AuthLib } from "@/lib/auth.lib";
 import { ErrorConstant } from "@/constants/error.constant";
 import { HttpStatusConstant } from "@/constants/http-status.constant";
 import { prismaTestUtils } from "./mocks/prisma.mock";
+import { jsonRequest, authedRequest } from "./test.utils";
 
 const BASE_URL = "http://localhost/api/auth";
-
-function jsonRequest(url: string, body: unknown) {
-  return new NextRequest(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-}
-
-function authedRequest(url: string, token: string, method = "GET") {
-  return new NextRequest(url, {
-    method,
-    headers: { authorization: `Bearer ${token}` },
-  });
-}
 
 describe("POST /api/auth/register", () => {
   it("(A1: register with email + password) creates a user and returns 201 with a token", async () => {
@@ -41,6 +27,13 @@ describe("POST /api/auth/register", () => {
     expect(json.success).toBe(true);
     expect(json.data.user.email).toBe("new@stockflow.dev");
     expect(typeof json.data.token).toBe("string");
+
+    const stored = prismaTestUtils.getUsers().find((u) => u.email === "new@stockflow.dev");
+    expect(stored).toBeDefined();
+    expect(stored?.name).toBe("New User");
+
+    const payload = await AuthLib.verifyToken(json.data.token);
+    expect(payload.sub).toBe(stored?.id);
   });
 
   it("(A5: minimum password policy enforced server-side) rejects a payload with an invalid email and short password", async () => {
@@ -74,6 +67,9 @@ describe("POST /api/auth/register", () => {
     expect(json.error.code).toBe(ErrorConstant.AUTH_EMAIL_EXISTS.code);
     expect(json.error.codeNumber).toBe(ErrorConstant.AUTH_EMAIL_EXISTS.codeNumber);
     expect(json.error.message).toBe(ErrorConstant.AUTH_EMAIL_EXISTS.message);
+
+    const matching = prismaTestUtils.getUsers().filter((u) => u.email === "existing@stockflow.dev");
+    expect(matching).toHaveLength(1);
   });
 
   it("(A4: passwords hashed with bcrypt/argon2) stores the password as a bcrypt hash, never plaintext or reversibly encrypted", async () => {
