@@ -223,7 +223,7 @@ describe("GET /api/auth/me", () => {
     expect(json.error.codeNumber).toBe(ErrorConstant.AUTH_UNAUTHORIZED.codeNumber);
   });
 
-  it("returns USER_NOT_FOUND when the token's subject no longer exists", async () => {
+  it("(A6: protected endpoint rejects a credential whose subject no longer exists) returns USER_NOT_FOUND when the token's subject no longer exists", async () => {
     const token = await AuthLib.signToken({ sub: "usr_does_not_exist", email: "ghost@stockflow.dev" });
 
     const res = await getMeHandler(authedRequest(`${BASE_URL}/me`, token));

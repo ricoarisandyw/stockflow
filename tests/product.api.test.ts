@@ -153,7 +153,7 @@ describe("GET /api/products/[id]", () => {
     expect(json.data.id).toBe(product.id);
   });
 
-  it("returns PRODUCT_NOT_FOUND for a non-existent product", async () => {
+  it("(I1: read) returns PRODUCT_NOT_FOUND for a non-existent product", async () => {
     const { token } = await authedUser();
 
     const res = await getProductDetailHandler(authedRequest(`${BASE_URL}/does-not-exist`, token), routeParams({ id: "does-not-exist" }));
