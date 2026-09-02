@@ -153,6 +153,27 @@ describe("POST /api/auth/login", () => {
     expect(json.error.message).toBe(ErrorConstant.AUTH_INVALID_CREDENTIALS.message);
   });
 
+  it("(A5: minimum password policy enforced server-side) rejects a login payload with a password shorter than 8 characters", async () => {
+    prismaTestUtils.seedUser({
+      email: "staff@stockflow.dev",
+      passwordHash: await AuthLib.hashPassword("short12"),
+    });
+
+    const res = await postLoginHandler(
+      jsonRequest(`${BASE_URL}/login`, {
+        email: "staff@stockflow.dev",
+        password: "short12",
+      })
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(HttpStatusConstant.getStatusCode(ErrorConstant.INVALID_PAYLOAD.code));
+    expect(json.success).toBe(false);
+    expect(json.error.code).toBe(ErrorConstant.INVALID_PAYLOAD.code);
+    expect(json.error.codeNumber).toBe(ErrorConstant.INVALID_PAYLOAD.codeNumber);
+    expect(json.error.details.length).toBeGreaterThan(0);
+  });
+
   it("(A9: no user-not-found vs wrong-password distinction) rejects an unknown email with the exact same AUTH_INVALID_CREDENTIALS error", async () => {
     prismaTestUtils.seedUser({
       email: "staff@stockflow.dev",
