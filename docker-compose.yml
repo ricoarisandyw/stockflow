@@ -8,7 +8,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - DATABASE_URL=file:./prisma/dev.db
+      - DATABASE_URL=${DATABASE_URL:-file:./prisma/dev.db}
+      - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN:-}
       - JWT_SECRET=${JWT_SECRET:-stockflow-production-jwt-secret-key-32chars}
       - TAX_RATE_PERCENT=${TAX_RATE_PERCENT:-11}
     volumes:
@@ -16,9 +17,7 @@ services:
       - /app/node_modules
       - /app/.next
     command: >
-      sh -c "apt-get update &&
-             apt-get install -y --no-install-recommends python3 make g++ openssl ca-certificates &&
-             corepack enable &&
+      sh -c "corepack enable &&
              pnpm install &&
              pnpm db:setup &&
              pnpm build &&
