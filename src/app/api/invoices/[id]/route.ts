@@ -49,7 +49,7 @@ export async function PATCH(request: NextRequest, { params }: TRouteParams) {
 
     const updated = await prisma.$transaction(async (tx) => {
       if (items) {
-        const lines = await InvoiceLib.resolveInvoiceLines(payload.sub, items);
+        const lines = await InvoiceLib.resolveInvoiceLines(payload.sub, items, tx);
         const totals = InvoiceLib.calculateTotals(lines);
 
         await tx.invoiceItem.deleteMany({ where: { invoiceId: id } });

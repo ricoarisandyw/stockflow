@@ -3,6 +3,7 @@ import { ApiError } from "@/lib/api-response";
 import { ErrorConstant } from "@/constants/error.constant";
 import { MoneyUtils } from "@/utils/money.utils";
 import type { TInvoiceItemInput } from "@/schemas/invoice.schema";
+import type { Prisma } from "@/generated/prisma/client";
 
 async function generateInvoiceNumber(): Promise<string> {
   const today = new Date();
@@ -28,10 +29,11 @@ type TResolvedInvoiceLine = {
 
 async function resolveInvoiceLines(
   userId: string,
-  items: TInvoiceItemInput[]
+  items: TInvoiceItemInput[],
+  transaction: Prisma.TransactionClient = prisma
 ): Promise<TResolvedInvoiceLine[]> {
   const productIds = [...new Set(items.map((item) => item.productId))];
-  const products = await prisma.product.findMany({
+  const products = await transaction.product.findMany({
     where: { id: { in: productIds }, userId },
   });
   const productMap = new Map(products.map((product) => [product.id, product]));
@@ -70,8 +72,43 @@ function calculateTotals(lines: TResolvedInvoiceLine[]) {
   );
 }
 
+async function decrementStockForItems(
+  items: { productId: string; quantity: number }[],
+  transaction: Prisma.TransactionClient = prisma
+): Promise<void> {
+  for (const item of items) {
+    const product = await transaction.product.findUnique({ where: { id: item.productId } });
+    if (!product || item.quantity > product.quantityOnHand) {
+      throw new ApiError(
+        ErrorConstant.INVOICE_INSUFFICIENT_STOCK,
+        product
+          ? `Insufficient stock for product "${product.name}". Available: ${product.quantityOnHand}, requested: ${item.quantity}.`
+          : undefined
+      );
+    }
+    await transaction.product.update({
+      where: { id: item.productId },
+      data: { quantityOnHand: { decrement: item.quantity } },
+    });
+  }
+}
+
+async function restoreStockForItems(
+  items: { productId: string; quantity: number }[],
+  transaction: Prisma.TransactionClient = prisma
+): Promise<void> {
+  for (const item of items) {
+    await transaction.product.update({
+      where: { id: item.productId },
+      data: { quantityOnHand: { increment: item.quantity } },
+    });
+  }
+}
+
 export const InvoiceLib = {
   generateInvoiceNumber,
   resolveInvoiceLines,
   calculateTotals,
+  decrementStockForItems,
+  restoreStockForItems,
 };
