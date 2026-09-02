@@ -39,6 +39,25 @@ export const ErrorConstant = {
   },
 
   // ==========================================
+  // 2000 - 2999: PRODUCT DOMAIN
+  // ==========================================
+  PRODUCT_NOT_FOUND: {
+    codeNumber: 2001,
+    code: "NOT_FOUND",
+    message: "Product not found.",
+  },
+  PRODUCT_SKU_EXISTS: {
+    codeNumber: 2002,
+    code: "CONFLICT",
+    message: "SKU is already in use.",
+  },
+  PRODUCT_HAS_INVOICE_ITEMS: {
+    codeNumber: 2003,
+    code: "CONFLICT",
+    message: "Product cannot be deleted because it is referenced by an invoice.",
+  },
+
+  // ==========================================
   // 9000 - 9999: GENERAL & SYSTEM DOMAIN
   // ==========================================
   INVALID_PAYLOAD: {
