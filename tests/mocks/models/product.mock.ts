@@ -20,17 +20,16 @@ function reset() {
   nextId = 1;
 }
 
-function seedProduct(
-  partial: Partial<MockProduct> & { userId: string; sku: string; name: string }
-): MockProduct {
+function seedProduct(partial: Partial<MockProduct> & { userId: string }): MockProduct {
+  const id = partial.id ?? `prd_${nextId++}`;
   const product: MockProduct = {
-    id: partial.id ?? `prd_${nextId++}`,
+    id,
     userId: partial.userId,
-    sku: partial.sku,
-    name: partial.name,
+    sku: partial.sku ?? id,
+    name: partial.name ?? "Test Product",
     description: partial.description ?? null,
-    unitPrice: partial.unitPrice ?? 0,
-    quantityOnHand: partial.quantityOnHand ?? 0,
+    unitPrice: partial.unitPrice ?? 850000,
+    quantityOnHand: partial.quantityOnHand ?? 10,
     createdAt: partial.createdAt ?? new Date(),
     updatedAt: partial.updatedAt ?? new Date(),
   };
@@ -127,11 +126,23 @@ export const productModel = {
       data,
     }: {
       where: { id: string };
-      data: Partial<Pick<MockProduct, "name" | "description" | "unitPrice" | "quantityOnHand">>;
+      data: Partial<Pick<MockProduct, "name" | "description" | "unitPrice">> & {
+        quantityOnHand?: number | { increment?: number; decrement?: number };
+      };
     }) => {
       const product = products.find((p) => p.id === where.id);
       if (!product) throw new Error("Product not found");
-      Object.assign(product, data, { updatedAt: new Date() });
+
+      const { quantityOnHand, ...rest } = data;
+      Object.assign(product, rest);
+      if (typeof quantityOnHand === "number") {
+        product.quantityOnHand = quantityOnHand;
+      } else if (quantityOnHand?.increment !== undefined) {
+        product.quantityOnHand += quantityOnHand.increment;
+      } else if (quantityOnHand?.decrement !== undefined) {
+        product.quantityOnHand -= quantityOnHand.decrement;
+      }
+      product.updatedAt = new Date();
       return product;
     }
   ),
