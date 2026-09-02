@@ -1,0 +1,36 @@
+{
+	"nodes":[
+		{"id":"node-tailwind","type":"text","text":"### TailwindCSS\nUtility-First Styling & Responsive Design","x":-170,"y":-260,"width":230,"height":110,"color":"5"},
+		{"id":"node-lucide","type":"text","text":"### Lucide React\nIcon Set & UI Visual Indicators","x":100,"y":-260,"width":230,"height":110,"color":"5"},
+		{"id":"node-sweetalert","type":"text","text":"### SweetAlert2\nModal Dialogs & Confirmation Prompts","x":370,"y":-260,"width":230,"height":110,"color":"5"},
+		{"id":"node-rhf","type":"text","text":"### React Hook Form\nForm Management & Dynamic Row Handling","x":-440,"y":-100,"width":230,"height":110,"color":"4"},
+		{"id":"node-zod","type":"text","text":"### Zod\nRuntime Schema Validation & Typing","x":-170,"y":-100,"width":230,"height":110,"color":"4"},
+		{"id":"node-nextjs","type":"text","text":"### Next.js 15\nFull-Stack React Framework & App Router","x":-440,"y":-440,"width":230,"height":110,"color":"5"},
+		{"id":"node-route-handlers","type":"text","text":"### Route Handlers\nREST API Endpoints & Response Envelope","x":600,"y":160,"width":235,"height":110,"color":"2"},
+		{"id":"node-openapi-spec","type":"text","text":"### OpenAPI 3.1\nSingle Source of Truth API Contract","x":100,"y":105,"width":235,"height":110,"color":"2"},
+		{"id":"node-swagger-cdn","type":"text","text":"### Swagger UI (CDN)\nInteractive Documentation Viewer","x":-175,"y":105,"width":235,"height":110,"color":"2"},
+		{"id":"node-jose-jwt","type":"text","text":"### Jose / JWT\nStateless Auth Token & Session Guard","x":95,"y":240,"width":230,"height":110,"color":"1"},
+		{"id":"node-argon2","type":"text","text":"### Argon2 / Bcrypt\nOne-Way Salted Password Hashing","x":-175,"y":240,"width":230,"height":110,"color":"1"},
+		{"id":"node-prisma","type":"text","text":"### Prisma 7 ORM\nType-Safe Query Engine & ACID Transactions","x":100,"y":375,"width":230,"height":110,"color":"6"},
+		{"id":"node-sqlite","type":"text","text":"### SQLite / LibSQL\nZero-Config Relational Database","x":-175,"y":375,"width":230,"height":110,"color":"6"},
+		{"id":"node-vitest","type":"text","text":"### Vitest\nAutomated Test Runner & Core Scenarios Suite","x":370,"y":520,"width":230,"height":110,"color":"3"},
+		{"id":"node-zod-resolver","type":"text","text":"### @hookform/resolvers\nBridge Zod Schema ke React Hook Form","x":130,"y":-100,"width":270,"height":110,"color":"4"},
+		{"id":"node-tanstack-query","type":"text","text":"### TanStack Query v5\nServer State Caching & Synchronization","x":600,"y":-100,"width":230,"height":110,"color":"4"}
+	],
+	"edges":[
+		{"id":"edge-nextjs-to-rhf","fromNode":"node-nextjs","fromSide":"bottom","toNode":"node-rhf","toSide":"top"},
+		{"id":"edge-rhf-to-resolver","fromNode":"node-rhf","fromSide":"right","toNode":"node-zod-resolver","toSide":"left"},
+		{"id":"edge-resolver-to-zod","fromNode":"node-zod-resolver","fromSide":"left","toNode":"node-zod","toSide":"right"},
+		{"id":"edge-tanstack-to-api","fromNode":"node-tanstack-query","fromSide":"bottom","toNode":"node-route-handlers","toSide":"top"},
+		{"id":"edge-api-to-jwt","fromNode":"node-route-handlers","fromSide":"bottom","toNode":"node-jose-jwt","toSide":"right"},
+		{"id":"edge-jwt-to-argon2","fromNode":"node-jose-jwt","fromSide":"left","toNode":"node-argon2","toSide":"right"},
+		{"id":"edge-api-to-prisma","fromNode":"node-route-handlers","fromSide":"bottom","toNode":"node-prisma","toSide":"right"},
+		{"id":"0561797fb9147e27","fromNode":"node-tailwind","fromSide":"top","toNode":"node-nextjs","toSide":"right"},
+		{"id":"c5e53f4725aa6053","fromNode":"node-lucide","fromSide":"top","toNode":"node-nextjs","toSide":"right"},
+		{"id":"363dee8a4ea35b62","fromNode":"node-sweetalert","fromSide":"top","toNode":"node-nextjs","toSide":"right"},
+		{"id":"757faa6793065708","fromNode":"node-route-handlers","fromSide":"left","toNode":"node-openapi-spec","toSide":"right"},
+		{"id":"3fca142fc76cbd3e","fromNode":"node-openapi-spec","fromSide":"left","toNode":"node-swagger-cdn","toSide":"right"},
+		{"id":"6b1dbf19944b82d2","fromNode":"node-prisma","fromSide":"left","toNode":"node-sqlite","toSide":"right"},
+		{"id":"25973df9772e2e88","fromNode":"node-zod","fromSide":"bottom","toNode":"node-route-handlers","toSide":"top"}
+	]
+}
