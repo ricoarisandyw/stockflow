@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run api:generate-types && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
@@ -12,16 +12,16 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
-    "db:setup": "npm run db:generate && npm run db:migrate && npm run db:seed",
+    "db:setup": "npm run db:generate && node scripts/db-sync.mjs && npm run db:seed",
     "api:generate-types": "openapi-typescript public/openapi.yaml -o src/generated/api/schema.d.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
-    "@prisma/adapter-better-sqlite3": "^7.10.0",
+    "@libsql/client": "^0.17.4",
+    "@prisma/adapter-libsql": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "@tanstack/react-query": "^5.102.8",
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^13.0.3",
     "dotenv": "^16.4.7",
     "jose": "^6.2.10",
     "lucide-react": "^1.38.0",
@@ -37,7 +37,6 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^20",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",

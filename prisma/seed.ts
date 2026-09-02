@@ -1,10 +1,12 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-const databaseFile = (process.env.DATABASE_URL ?? "file:./dev.db").replace(/^file:/, "");
-const adapter = new PrismaBetterSqlite3({ url: databaseFile });
+const url = process.env.DATABASE_URL ?? "file:./dev.db";
+const authToken = process.env.TURSO_AUTH_TOKEN;
+
+const adapter = new PrismaLibSql({ url, authToken });
 const prisma = new PrismaClient({ adapter });
 
 const DEMO_EMAIL = "staff@stockflow.dev";
